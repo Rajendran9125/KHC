@@ -1,0 +1,25 @@
+package com.khc.dto;
+
+import lombok.Data;
+
+@Data
+public class OpNewRegistrationReq {
+    // Patient details
+    private String firstName;
+    private String lastName;
+    private Integer age;
+    private String gender; // MALE, FEMALE, OTHER
+    private String mobile;
+    private String email;
+    private String address;
+    private String bloodGroup;
+    private String emergencyContact;
+
+    // OP Visit details
+    private Long doctorId;
+    private String patientType; // GENERAL, VIP, INSURANCE, CORPORATE
+    private String paymentType; // CASH, CARD, UPI
+    private Double consultationFee;
+    private String department;
+    private String remarks;
+}
