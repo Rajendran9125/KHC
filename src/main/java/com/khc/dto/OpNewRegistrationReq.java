@@ -1,12 +1,14 @@
 package com.khc.dto;
 
 import lombok.Data;
+import java.time.LocalDate;
 
 @Data
 public class OpNewRegistrationReq {
     // Patient details
     private String firstName;
     private String lastName;
+    private LocalDate dob;
     private Integer age;
     private String gender; // MALE, FEMALE, OTHER
     private String mobile;

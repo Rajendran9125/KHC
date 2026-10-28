@@ -4,6 +4,7 @@ import com.khc.dto.ApiResponse;
 import com.khc.dto.ModifyDoctorReq;
 import com.khc.dto.ModifyPaymentTypeReq;
 import com.khc.dto.OpBillCreateReq;
+import com.khc.dto.RefundReq;
 import com.khc.model.OpBill;
 import com.khc.service.BillingService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,6 +39,20 @@ public class BillingController {
     public ResponseEntity<ApiResponse<OpBill>> modifyPaymentType(@RequestBody ModifyPaymentTypeReq req) {
         OpBill bill = billingService.modifyBillPaymentType(req.getId(), req.getPaymentType(), req.getReason());
         return ResponseEntity.ok(ApiResponse.ok("Payment type modified successfully on Bill: " + bill.getBillNumber(), bill));
+    }
+
+    // 4. REFUND / REVERT SPECIFIC SERVICE ITEM
+    @PostMapping("/refund-item")
+    public ResponseEntity<ApiResponse<OpBill>> refundBillItem(@RequestBody RefundReq req) {
+        OpBill bill = billingService.refundBillItem(req.getBillId(), req.getItemId(), req.getReason());
+        return ResponseEntity.ok(ApiResponse.ok("Service item refunded and reverted successfully", bill));
+    }
+
+    // 5. REFUND FULL BILL
+    @PostMapping("/refund-full")
+    public ResponseEntity<ApiResponse<OpBill>> refundFullBill(@RequestBody RefundReq req) {
+        OpBill bill = billingService.refundFullBill(req.getBillId(), req.getReason());
+        return ResponseEntity.ok(ApiResponse.ok("Full bill refunded successfully", bill));
     }
 
     // List and details

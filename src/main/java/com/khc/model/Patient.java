@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import java.time.LocalDate;
+
 @Entity
 @Data
 @EqualsAndHashCode(callSuper = false)
@@ -22,6 +24,9 @@ public class Patient extends BaseEntity {
 
     @Column(name = "last_name")
     private String lastName;
+
+    @Column(name = "dob")
+    private LocalDate dob;
 
     @Column(name = "age")
     private Integer age;

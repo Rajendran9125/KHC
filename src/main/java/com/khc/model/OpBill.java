@@ -55,8 +55,11 @@ public class OpBill extends BaseEntity {
     @Column(name = "paid_amount")
     private Double paidAmount = 0.0;
 
+    @Column(name = "refunded_amount")
+    private Double refundedAmount = 0.0;
+
     @Column(name = "payment_status")
-    private String paymentStatus = "PAID"; // PAID, PARTIAL, UNPAID
+    private String paymentStatus = "PAID"; // PAID, PARTIAL, UNPAID, REFUNDED, PARTIAL_REFUND
 
     @Column(name = "remarks")
     private String remarks;

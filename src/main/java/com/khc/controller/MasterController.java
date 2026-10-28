@@ -42,6 +42,12 @@ public class MasterController {
         return ResponseEntity.ok(ApiResponse.ok("User deleted successfully", null));
     }
 
+    // --- System Menus (from DB table) ---
+    @GetMapping("/menus")
+    public ResponseEntity<ApiResponse<List<AppMenu>>> getAllMenus() {
+        return ResponseEntity.ok(ApiResponse.ok(masterService.getAllMenus()));
+    }
+
     // --- Services (SERVICE MASTER: Service Name, Header, Department, OPRATE, IPRATE, Status) ---
     @GetMapping("/services")
     public ResponseEntity<ApiResponse<List<HospitalService>>> getAllServices(

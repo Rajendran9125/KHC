@@ -53,14 +53,16 @@ public class ReportService {
         }
 
         double totalAmount = bills.stream().mapToDouble(b -> b.getTotalAmount() != null ? b.getTotalAmount() : 0.0).sum();
-        double totalPaid = bills.stream().mapToDouble(b -> b.getPaidAmount() != null ? b.getPaidAmount() : 0.0).sum();
+        double totalRefunded = bills.stream().mapToDouble(b -> b.getRefundedAmount() != null ? b.getRefundedAmount() : 0.0).sum();
+        double totalPaid = bills.stream().mapToDouble(b -> Math.max(0.0, (b.getPaidAmount() != null ? b.getPaidAmount() : 0.0) - (b.getRefundedAmount() != null ? b.getRefundedAmount() : 0.0))).sum();
         double totalDiscount = bills.stream().mapToDouble(b -> b.getDiscount() != null ? b.getDiscount() : 0.0).sum();
 
         Map<String, Object> report = new HashMap<>();
         report.put("bills", bills);
         report.put("totalCount", bills.size());
         report.put("totalAmount", totalAmount);
-        report.put("totalPaid", totalPaid);
+        report.put("totalRefunded", totalRefunded);
+        report.put("totalPaid", totalPaid); // Net Collected after deducting refunds
         report.put("totalDiscount", totalDiscount);
         return report;
     }
@@ -83,23 +85,25 @@ public class ReportService {
         }
 
         double totalBilled = bills.stream().mapToDouble(b -> b.getTotalAmount() != null ? b.getTotalAmount() : 0.0).sum();
-        double totalPaid = bills.stream().mapToDouble(b -> b.getPaidAmount() != null ? b.getPaidAmount() : 0.0).sum();
+        double totalRefunded = bills.stream().mapToDouble(b -> b.getRefundedAmount() != null ? b.getRefundedAmount() : 0.0).sum();
+        double totalPaid = bills.stream().mapToDouble(b -> Math.max(0.0, (b.getPaidAmount() != null ? b.getPaidAmount() : 0.0) - (b.getRefundedAmount() != null ? b.getRefundedAmount() : 0.0))).sum();
         double totalDiscount = bills.stream().mapToDouble(b -> b.getDiscount() != null ? b.getDiscount() : 0.0).sum();
 
-        // Payment type breakdown
+        // Payment type breakdown net of refunds
         Map<String, Double> paymentTypeBreakdown = bills.stream()
                 .collect(Collectors.groupingBy(
                         b -> b.getPaymentType() != null ? b.getPaymentType() : "OTHER",
-                        Collectors.summingDouble(b -> b.getPaidAmount() != null ? b.getPaidAmount() : 0.0)
+                        Collectors.summingDouble(b -> Math.max(0.0, (b.getPaidAmount() != null ? b.getPaidAmount() : 0.0) - (b.getRefundedAmount() != null ? b.getRefundedAmount() : 0.0)))
                 ));
 
-        // Service-wise breakdown
+        // Service-wise breakdown (excluding refunded items)
         Map<String, Double> serviceWiseRevenue = new HashMap<>();
         Map<String, Integer> serviceWiseCount = new HashMap<>();
 
         for (OpBill bill : bills) {
             if (bill.getItems() != null) {
                 for (OpBillItem item : bill.getItems()) {
+                    if ("REFUNDED".equalsIgnoreCase(item.getStatus())) continue;
                     String cat = item.getServiceCategory() != null ? item.getServiceCategory() : "GENERAL";
                     serviceWiseRevenue.put(cat, serviceWiseRevenue.getOrDefault(cat, 0.0) + (item.getTotalPrice() != null ? item.getTotalPrice() : 0.0));
                     serviceWiseCount.put(cat, serviceWiseCount.getOrDefault(cat, 0) + (item.getQuantity() != null ? item.getQuantity() : 1));
@@ -109,7 +113,8 @@ public class ReportService {
 
         Map<String, Object> report = new HashMap<>();
         report.put("totalBilled", totalBilled);
-        report.put("totalPaid", totalPaid);
+        report.put("totalRefunded", totalRefunded);
+        report.put("totalPaid", totalPaid); // Net Realized Revenue
         report.put("totalDiscount", totalDiscount);
         report.put("billCount", bills.size());
         report.put("paymentTypeBreakdown", paymentTypeBreakdown);

@@ -35,6 +35,9 @@ public class MasterService {
     @Autowired
     private OpBillRepo billRepo;
 
+    @Autowired
+    private AppMenuRepo menuRepo;
+
     // --- Users ---
     public List<AppUser> getAllUsers() {
         return userRepo.findAll();
@@ -73,6 +76,11 @@ public class MasterService {
 
     public void deleteUser(Long id) {
         userRepo.deleteById(id);
+    }
+
+    // --- System Menus (from DB table) ---
+    public List<AppMenu> getAllMenus() {
+        return menuRepo.findByIsActiveTrueOrderByDisplayOrderAsc();
     }
 
     // --- User Authentication / Login ---
@@ -123,6 +131,45 @@ public class MasterService {
                 user.getDepartment(),
                 allowedMenusList
         );
+    }
+
+    public void resetPassword(String username, String newPassword, String emailOrPhone) {
+        if (username == null || username.trim().isEmpty()) {
+            throw new RuntimeException("Username is required");
+        }
+        if (emailOrPhone == null || emailOrPhone.trim().isEmpty()) {
+            throw new RuntimeException("Registered Email or Phone number is mandatory for identity verification");
+        }
+        if (newPassword == null || newPassword.trim().isEmpty()) {
+            throw new RuntimeException("New password cannot be empty");
+        }
+        if (newPassword.trim().length() < 4) {
+            throw new RuntimeException("Password must be at least 4 characters long");
+        }
+
+        AppUser user = userRepo.findByUsername(username.trim())
+                .orElseThrow(() -> new RuntimeException("User account '" + username + "' not found"));
+
+        String input = emailOrPhone.trim().toLowerCase();
+        String inputDigits = input.replaceAll("[^0-9]", "");
+
+        boolean emailMatch = user.getEmail() != null && !user.getEmail().trim().isEmpty()
+                && user.getEmail().trim().toLowerCase().equals(input);
+
+        boolean phoneMatch = false;
+        if (user.getPhone() != null && !user.getPhone().trim().isEmpty() && !inputDigits.isEmpty()) {
+            String userDigits = user.getPhone().trim().replaceAll("[^0-9]", "");
+            phoneMatch = userDigits.equals(inputDigits)
+                    || (userDigits.length() >= 10 && inputDigits.endsWith(userDigits))
+                    || (inputDigits.length() >= 10 && userDigits.endsWith(inputDigits));
+        }
+
+        if (!emailMatch && !phoneMatch) {
+            throw new RuntimeException("Verification failed: The provided Email or Phone does not match the registered records for user '" + username + "'");
+        }
+
+        user.setPassword(newPassword.trim());
+        userRepo.save(user);
     }
 
     // --- Hospital Services (Tariff & Amount Master) ---

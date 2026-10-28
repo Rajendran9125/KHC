@@ -34,6 +34,28 @@ public class BillingService {
 
     private static final AtomicLong billCounter = new AtomicLong(3001);
 
+    @jakarta.annotation.PostConstruct
+    public void initCounters() {
+        try {
+            long maxBill = 3000;
+            List<OpBill> bills = billRepo.findAll();
+            for (OpBill b : bills) {
+                if (b.getBillNumber() != null) {
+                    String clean = b.getBillNumber().trim();
+                    if (clean.startsWith("BILL") && !clean.contains("-")) {
+                        try {
+                            long val = Long.parseLong(clean.substring(4));
+                            if (val > maxBill) maxBill = val;
+                        } catch (Exception ignored) {}
+                    }
+                }
+            }
+            billCounter.set(maxBill + 1);
+        } catch (Exception e) {
+            billCounter.set(3001);
+        }
+    }
+
     @Transactional
     public OpBill createOpServiceBill(OpBillCreateReq req) {
         Patient patient = patientRepo.findById(req.getPatientId())
@@ -51,9 +73,8 @@ public class BillingService {
             }
         }
 
-        String year = String.valueOf(LocalDate.now().getYear());
         OpBill bill = new OpBill();
-        bill.setBillNumber("BILL-" + year + "-" + String.format("%04d", billCounter.getAndIncrement()));
+        bill.setBillNumber("BILL" + billCounter.getAndIncrement());
         bill.setPatient(patient);
         bill.setDoctor(doctor);
         bill.setOpRegistration(opRegistration);
@@ -76,6 +97,7 @@ public class BillingService {
                 item.setQuantity(qty);
                 item.setUnitPrice(price);
                 item.setTotalPrice(total);
+                item.setStatus("BILLED");
                 subTotal += total;
                 billItems.add(item);
             }
@@ -127,6 +149,77 @@ public class BillingService {
         if (reason != null && !reason.trim().isEmpty()) {
             bill.setRemarks((bill.getRemarks() != null ? bill.getRemarks() + " | " : "") + "Payment Type changed: " + reason);
         }
+        return billRepo.save(bill);
+    }
+
+    @Transactional
+    public OpBill refundBillItem(Long billId, Long itemId, String reason) {
+        OpBill bill = billRepo.findById(billId)
+                .orElseThrow(() -> new RuntimeException("Bill not found with id: " + billId));
+
+        OpBillItem targetItem = bill.getItems().stream()
+                .filter(item -> item.getId().equals(itemId))
+                .findFirst()
+                .orElseThrow(() -> new RuntimeException("Bill item not found with id: " + itemId));
+
+        if ("REFUNDED".equalsIgnoreCase(targetItem.getStatus())) {
+            throw new RuntimeException("Item is already refunded: " + targetItem.getServiceName());
+        }
+
+        targetItem.setStatus("REFUNDED");
+        targetItem.setRefundReason(reason != null && !reason.trim().isEmpty() ? reason.trim() : "Service skipped / cancelled");
+        targetItem.setRefundDate(LocalDateTime.now());
+        billItemRepo.save(targetItem);
+
+        // Recalculate refunded amount
+        double totalRefunded = bill.getItems().stream()
+                .filter(item -> "REFUNDED".equalsIgnoreCase(item.getStatus()))
+                .mapToDouble(item -> item.getTotalPrice() != null ? item.getTotalPrice() : 0.0)
+                .sum();
+
+        bill.setRefundedAmount(totalRefunded);
+
+        boolean allRefunded = bill.getItems().stream()
+                .allMatch(item -> "REFUNDED".equalsIgnoreCase(item.getStatus()));
+
+        if (allRefunded) {
+            bill.setPaymentStatus("REFUNDED");
+        } else if (totalRefunded > 0) {
+            bill.setPaymentStatus("PARTIAL_REFUND");
+        }
+
+        if (reason != null && !reason.trim().isEmpty()) {
+            bill.setRemarks((bill.getRemarks() != null ? bill.getRemarks() + " | " : "") + 
+                    "Refunded " + targetItem.getServiceName() + " (₹" + targetItem.getTotalPrice() + "): " + reason);
+        }
+
+        return billRepo.save(bill);
+    }
+
+    @Transactional
+    public OpBill refundFullBill(Long billId, String reason) {
+        OpBill bill = billRepo.findById(billId)
+                .orElseThrow(() -> new RuntimeException("Bill not found with id: " + billId));
+
+        for (OpBillItem item : bill.getItems()) {
+            if (!"REFUNDED".equalsIgnoreCase(item.getStatus())) {
+                item.setStatus("REFUNDED");
+                item.setRefundReason(reason != null && !reason.trim().isEmpty() ? reason.trim() : "Full bill refund");
+                item.setRefundDate(LocalDateTime.now());
+                billItemRepo.save(item);
+            }
+        }
+
+        double totalRefunded = bill.getItems().stream()
+                .mapToDouble(item -> item.getTotalPrice() != null ? item.getTotalPrice() : 0.0)
+                .sum();
+
+        bill.setRefundedAmount(totalRefunded);
+        bill.setPaymentStatus("REFUNDED");
+        if (reason != null && !reason.trim().isEmpty()) {
+            bill.setRemarks((bill.getRemarks() != null ? bill.getRemarks() + " | " : "") + "Full bill refunded: " + reason);
+        }
+
         return billRepo.save(bill);
     }
 

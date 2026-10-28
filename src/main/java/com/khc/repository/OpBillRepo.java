@@ -30,6 +30,6 @@ public interface OpBillRepo extends JpaRepository<OpBill, Long> {
     @Query("SELECT SUM(b.totalAmount) FROM OpBill b")
     Double sumTotalRevenue();
 
-    @Query("SELECT SUM(b.paidAmount) FROM OpBill b")
+    @Query("SELECT SUM(COALESCE(b.paidAmount, 0) - COALESCE(b.refundedAmount, 0)) FROM OpBill b")
     Double sumPaidRevenue();
 }

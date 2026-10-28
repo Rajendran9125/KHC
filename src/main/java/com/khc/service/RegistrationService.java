@@ -9,6 +9,7 @@ import com.khc.model.Patient;
 import com.khc.repository.DoctorRepo;
 import com.khc.repository.OpRegistrationRepo;
 import com.khc.repository.PatientRepo;
+import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,8 +31,54 @@ public class RegistrationService {
     @Autowired
     private DoctorRepo doctorRepo;
 
-    private static final AtomicLong mrnCounter = new AtomicLong(1001);
+    private static final AtomicLong mrnCounter = new AtomicLong(1);
     private static final AtomicLong opCounter = new AtomicLong(2001);
+
+    @PostConstruct
+    public void initCounters() {
+        try {
+            String currentYear = String.valueOf(LocalDate.now().getYear());
+            String prefix = "MRN" + currentYear;
+            long maxSeq = 0;
+            List<Patient> patients = patientRepo.findAll();
+            for (Patient p : patients) {
+                if (p.getMrn() != null) {
+                    String clean = p.getMrn().trim();
+                    if (clean.startsWith(prefix)) {
+                        try {
+                            String numPart = clean.substring(prefix.length());
+                            long val = Long.parseLong(numPart);
+                            if (val > maxSeq) {
+                                maxSeq = val;
+                            }
+                        } catch (Exception ignored) {}
+                    }
+                }
+            }
+            mrnCounter.set(maxSeq + 1);
+        } catch (Exception e) {
+            mrnCounter.set(1);
+        }
+
+        try {
+            long maxOp = 2000;
+            List<OpRegistration> ops = registrationRepo.findAll();
+            for (OpRegistration o : ops) {
+                if (o.getOpNumber() != null) {
+                    String clean = o.getOpNumber().trim();
+                    if (clean.startsWith("OP") && !clean.contains("-")) {
+                        try {
+                            long val = Long.parseLong(clean.substring(2));
+                            if (val > maxOp) maxOp = val;
+                        } catch (Exception ignored) {}
+                    }
+                }
+            }
+            opCounter.set(maxOp + 1);
+        } catch (Exception e) {
+            opCounter.set(2001);
+        }
+    }
 
     @Transactional
     public OpRegistration registerOpNew(OpNewRegistrationReq req) {
@@ -41,9 +88,11 @@ public class RegistrationService {
         // Create new Patient
         Patient patient = new Patient();
         String year = String.valueOf(LocalDate.now().getYear());
-        patient.setMrn("MRN-" + year + "-" + String.format("%04d", mrnCounter.getAndIncrement()));
+        long seq = mrnCounter.getAndIncrement();
+        patient.setMrn("MRN" + year + String.format("%03d", seq));
         patient.setFirstName(req.getFirstName());
         patient.setLastName(req.getLastName());
+        patient.setDob(req.getDob());
         patient.setAge(req.getAge());
         patient.setGender(req.getGender() != null ? req.getGender() : "MALE");
         patient.setMobile(req.getMobile());
@@ -55,7 +104,7 @@ public class RegistrationService {
 
         // Create OP Registration
         OpRegistration op = new OpRegistration();
-        op.setOpNumber("OP-" + year + "-" + String.format("%04d", opCounter.getAndIncrement()));
+        op.setOpNumber("OP" + opCounter.getAndIncrement());
         op.setPatient(patient);
         op.setDoctor(doctor);
         op.setVisitType("NEW");
@@ -86,9 +135,8 @@ public class RegistrationService {
         Doctor doctor = doctorRepo.findById(req.getDoctorId())
                 .orElseThrow(() -> new RuntimeException("Doctor not found with id: " + req.getDoctorId()));
 
-        String year = String.valueOf(LocalDate.now().getYear());
         OpRegistration op = new OpRegistration();
-        op.setOpNumber("OP-" + year + "-" + String.format("%04d", opCounter.getAndIncrement()));
+        op.setOpNumber("OP" + opCounter.getAndIncrement());
         op.setPatient(patient);
         op.setDoctor(doctor);
         op.setVisitType("REVIEW");
@@ -112,6 +160,7 @@ public class RegistrationService {
 
         if (req.getFirstName() != null) patient.setFirstName(req.getFirstName());
         if (req.getLastName() != null) patient.setLastName(req.getLastName());
+        if (req.getDob() != null) patient.setDob(req.getDob());
         if (req.getAge() != null) patient.setAge(req.getAge());
         if (req.getGender() != null) patient.setGender(req.getGender());
         if (req.getMobile() != null) patient.setMobile(req.getMobile());

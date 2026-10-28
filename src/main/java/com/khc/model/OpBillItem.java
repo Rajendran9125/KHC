@@ -5,6 +5,8 @@ import jakarta.persistence.*;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import java.time.LocalDateTime;
+
 @Entity
 @Data
 @EqualsAndHashCode(callSuper = false)
@@ -34,4 +36,13 @@ public class OpBillItem extends BaseEntity {
 
     @Column(name = "total_price")
     private Double totalPrice = 0.0;
+
+    @Column(name = "status")
+    private String status = "BILLED"; // BILLED, REFUNDED
+
+    @Column(name = "refund_reason")
+    private String refundReason;
+
+    @Column(name = "refund_date")
+    private LocalDateTime refundDate;
 }
