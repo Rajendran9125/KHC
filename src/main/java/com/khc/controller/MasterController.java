@@ -1,9 +1,6 @@
 package com.khc.controller;
 
-import com.khc.dto.ApiResponse;
-import com.khc.dto.DoctorDto;
-import com.khc.dto.HospitalServiceDto;
-import com.khc.dto.UserDto;
+import com.khc.dto.*;
 import com.khc.model.*;
 import com.khc.service.MasterService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -99,6 +96,79 @@ public class MasterController {
     @GetMapping("/payment-types")
     public ResponseEntity<ApiResponse<List<PaymentType>>> getPaymentTypes() {
         return ResponseEntity.ok(ApiResponse.ok(masterService.getAllPaymentTypes()));
+    }
+
+    // --- Location: Countries ---
+    @GetMapping("/countries")
+    public ResponseEntity<ApiResponse<List<Country>>> getCountries(@RequestParam(required = false, defaultValue = "false") boolean activeOnly) {
+        List<Country> list = activeOnly ? masterService.getActiveCountries() : masterService.getAllCountries();
+        return ResponseEntity.ok(ApiResponse.ok(list));
+    }
+
+    @PostMapping("/countries")
+    public ResponseEntity<ApiResponse<Country>> createCountry(@RequestBody CountryDto dto) {
+        return ResponseEntity.ok(ApiResponse.ok("Country created successfully", masterService.createCountry(dto)));
+    }
+
+    @PutMapping("/countries/{id}")
+    public ResponseEntity<ApiResponse<Country>> updateCountry(@PathVariable Integer id, @RequestBody CountryDto dto) {
+        return ResponseEntity.ok(ApiResponse.ok("Country updated successfully", masterService.updateCountry(id, dto)));
+    }
+
+    @DeleteMapping("/countries/{id}")
+    public ResponseEntity<ApiResponse<Void>> deleteCountry(@PathVariable Integer id) {
+        masterService.deleteCountry(id);
+        return ResponseEntity.ok(ApiResponse.ok("Country deleted successfully", null));
+    }
+
+    // --- Location: States ---
+    @GetMapping("/states")
+    public ResponseEntity<ApiResponse<List<State>>> getStates(
+            @RequestParam(required = false) Integer countryId,
+            @RequestParam(required = false, defaultValue = "false") boolean activeOnly) {
+        List<State> list = activeOnly ? masterService.getActiveStates(countryId) : masterService.getAllStates(countryId);
+        return ResponseEntity.ok(ApiResponse.ok(list));
+    }
+
+    @PostMapping("/states")
+    public ResponseEntity<ApiResponse<State>> createState(@RequestBody StateDto dto) {
+        return ResponseEntity.ok(ApiResponse.ok("State created successfully", masterService.createState(dto)));
+    }
+
+    @PutMapping("/states/{id}")
+    public ResponseEntity<ApiResponse<State>> updateState(@PathVariable Integer id, @RequestBody StateDto dto) {
+        return ResponseEntity.ok(ApiResponse.ok("State updated successfully", masterService.updateState(id, dto)));
+    }
+
+    @DeleteMapping("/states/{id}")
+    public ResponseEntity<ApiResponse<Void>> deleteState(@PathVariable Integer id) {
+        masterService.deleteState(id);
+        return ResponseEntity.ok(ApiResponse.ok("State deleted successfully", null));
+    }
+
+    // --- Location: Cities ---
+    @GetMapping("/cities")
+    public ResponseEntity<ApiResponse<List<City>>> getCities(
+            @RequestParam(required = false) Integer stateId,
+            @RequestParam(required = false, defaultValue = "false") boolean activeOnly) {
+        List<City> list = activeOnly ? masterService.getActiveCities(stateId) : masterService.getAllCities(stateId);
+        return ResponseEntity.ok(ApiResponse.ok(list));
+    }
+
+    @PostMapping("/cities")
+    public ResponseEntity<ApiResponse<City>> createCity(@RequestBody CityDto dto) {
+        return ResponseEntity.ok(ApiResponse.ok("City created successfully", masterService.createCity(dto)));
+    }
+
+    @PutMapping("/cities/{id}")
+    public ResponseEntity<ApiResponse<City>> updateCity(@PathVariable Integer id, @RequestBody CityDto dto) {
+        return ResponseEntity.ok(ApiResponse.ok("City updated successfully", masterService.updateCity(id, dto)));
+    }
+
+    @DeleteMapping("/cities/{id}")
+    public ResponseEntity<ApiResponse<Void>> deleteCity(@PathVariable Integer id) {
+        masterService.deleteCity(id);
+        return ResponseEntity.ok(ApiResponse.ok("City deleted successfully", null));
     }
 
     // --- Admin Dashboard Stats ---

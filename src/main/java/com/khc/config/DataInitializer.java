@@ -36,6 +36,15 @@ public class DataInitializer implements CommandLineRunner {
     @Autowired
     private AppMenuRepo menuRepo;
 
+    @Autowired
+    private CountryRepo countryRepo;
+
+    @Autowired
+    private StateRepo stateRepo;
+
+    @Autowired
+    private CityRepo cityRepo;
+
     @Override
     public void run(String... args) throws Exception {
         // 1. Clean up sample transactional data (bills, registrations, patients)
@@ -228,6 +237,135 @@ public class DataInitializer implements CommandLineRunner {
                 menu.setIsActive(true);
                 menuRepo.save(menu);
             }
+            if (!menuRepo.existsByMenuCode("location-master")) {
+                AppMenu menu = new AppMenu();
+                menu.setMenuCode("location-master");
+                menu.setMenuLabel("MASTER: LOCATION MASTER (COUNTRY / STATE / CITY)");
+                menu.setCategory("MASTER");
+                menu.setDisplayOrder(4);
+                menu.setIsActive(true);
+                menuRepo.save(menu);
+            }
+        }
+
+        // 6. Seed Location Master Data (Country -> State -> City)
+        if (countryRepo.count() == 0) {
+            Country india = new Country();
+            india.setCountryName("India");
+            india.setCountryCode("IN");
+            india.setPhoneCode("+91");
+            india.setIsActive(true);
+            india = countryRepo.save(india);
+
+            Country uae = new Country();
+            uae.setCountryName("United Arab Emirates");
+            uae.setCountryCode("UAE");
+            uae.setPhoneCode("+971");
+            uae.setIsActive(true);
+            countryRepo.save(uae);
+
+            Country usa = new Country();
+            usa.setCountryName("United States");
+            usa.setCountryCode("US");
+            usa.setPhoneCode("+1");
+            usa.setIsActive(true);
+            countryRepo.save(usa);
+
+            // States for India
+            State tn = new State();
+            tn.setStateName("Tamil Nadu");
+            tn.setStateCode("TN");
+            tn.setCountry(india);
+            tn.setIsActive(true);
+            tn = stateRepo.save(tn);
+
+            State ka = new State();
+            ka.setStateName("Karnataka");
+            ka.setStateCode("KA");
+            ka.setCountry(india);
+            ka.setIsActive(true);
+            ka = stateRepo.save(ka);
+
+            State kl = new State();
+            kl.setStateName("Kerala");
+            kl.setStateCode("KL");
+            kl.setCountry(india);
+            kl.setIsActive(true);
+            kl = stateRepo.save(kl);
+
+            State ap = new State();
+            ap.setStateName("Andhra Pradesh");
+            ap.setStateCode("AP");
+            ap.setCountry(india);
+            ap.setIsActive(true);
+            ap = stateRepo.save(ap);
+
+            // Cities for Tamil Nadu
+            Object[][] tnCities = {
+                    {"Melvisharam", "632509"},
+                    {"Ranipet", "632401"},
+                    {"Vellore", "632001"},
+                    {"Arcot", "632503"},
+                    {"Walajapet", "632513"},
+                    {"Gudiyatham", "632602"},
+                    {"Ambur", "635802"},
+                    {"Vaniyambadi", "635751"},
+                    {"Tirupathur", "635601"},
+                    {"Chennai", "600001"},
+                    {"Kanchipuram", "631501"}
+            };
+            for (Object[] c : tnCities) {
+                City city = new City();
+                city.setCityName((String) c[0]);
+                city.setDefaultPincode((String) c[1]);
+                city.setState(tn);
+                city.setIsActive(true);
+                cityRepo.save(city);
+            }
+
+            // Cities for Karnataka
+            Object[][] kaCities = {
+                    {"Bengaluru", "560001"},
+                    {"Mysuru", "570001"}
+            };
+            for (Object[] c : kaCities) {
+                City city = new City();
+                city.setCityName((String) c[0]);
+                city.setDefaultPincode((String) c[1]);
+                city.setState(ka);
+                city.setIsActive(true);
+                cityRepo.save(city);
+            }
+
+            // Cities for Kerala
+            Object[][] klCities = {
+                    {"Kochi", "682001"},
+                    {"Thiruvananthapuram", "695001"}
+            };
+            for (Object[] c : klCities) {
+                City city = new City();
+                city.setCityName((String) c[0]);
+                city.setDefaultPincode((String) c[1]);
+                city.setState(kl);
+                city.setIsActive(true);
+                cityRepo.save(city);
+            }
+
+            // Cities for Andhra Pradesh
+            Object[][] apCities = {
+                    {"Chittoor", "517001"},
+                    {"Tirupati", "517501"}
+            };
+            for (Object[] c : apCities) {
+                City city = new City();
+                city.setCityName((String) c[0]);
+                city.setDefaultPincode((String) c[1]);
+                city.setState(ap);
+                city.setIsActive(true);
+                cityRepo.save(city);
+            }
+
+            System.out.println(">>> Location Master Seeded (Countries, States, Cities).");
         }
 
         System.out.println(">>> KH CLINIC System Ready: Only 1 Admin user configured (admin / admin123). Sample data removed.");

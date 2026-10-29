@@ -97,7 +97,11 @@ public class RegistrationService {
         patient.setGender(req.getGender() != null ? req.getGender() : "MALE");
         patient.setMobile(req.getMobile());
         patient.setEmail(req.getEmail());
-        patient.setAddress(req.getAddress());
+        patient.setAddress(req.getAddress() != null && !req.getAddress().isEmpty() ? req.getAddress() : req.getResidentialAddress());
+        patient.setCountryId(req.getCountryId());
+        patient.setStateId(req.getStateId());
+        patient.setCityId(req.getCityId());
+        patient.setPincode(req.getPincode());
         patient.setBloodGroup(req.getBloodGroup());
         patient.setEmergencyContact(req.getEmergencyContact());
         patient = patientRepo.save(patient);
@@ -114,6 +118,11 @@ public class RegistrationService {
         op.setConsultationFee(req.getConsultationFee() != null ? req.getConsultationFee() : doctor.getConsultationFee());
         op.setStatus("WAITING");
         op.setRemarks(req.getRemarks());
+        op.setCountryId(req.getCountryId());
+        op.setStateId(req.getStateId());
+        op.setCityId(req.getCityId());
+        op.setPincode(req.getPincode());
+        op.setResidentialAddress(req.getResidentialAddress() != null && !req.getResidentialAddress().isEmpty() ? req.getResidentialAddress() : req.getAddress());
         op.setRegistrationDate(LocalDateTime.now());
 
         return registrationRepo.save(op);
@@ -166,6 +175,10 @@ public class RegistrationService {
         if (req.getMobile() != null) patient.setMobile(req.getMobile());
         if (req.getEmail() != null) patient.setEmail(req.getEmail());
         if (req.getAddress() != null) patient.setAddress(req.getAddress());
+        if (req.getCountryId() != null) patient.setCountryId(req.getCountryId());
+        if (req.getStateId() != null) patient.setStateId(req.getStateId());
+        if (req.getCityId() != null) patient.setCityId(req.getCityId());
+        if (req.getPincode() != null) patient.setPincode(req.getPincode());
         if (req.getBloodGroup() != null) patient.setBloodGroup(req.getBloodGroup());
         if (req.getEmergencyContact() != null) patient.setEmergencyContact(req.getEmergencyContact());
 

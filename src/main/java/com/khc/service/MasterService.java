@@ -1,9 +1,6 @@
 package com.khc.service;
 
-import com.khc.dto.DoctorDto;
-import com.khc.dto.HospitalServiceDto;
-import com.khc.dto.LoginResp;
-import com.khc.dto.UserDto;
+import com.khc.dto.*;
 import com.khc.model.*;
 import com.khc.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,6 +34,15 @@ public class MasterService {
 
     @Autowired
     private AppMenuRepo menuRepo;
+
+    @Autowired
+    private CountryRepo countryRepo;
+
+    @Autowired
+    private StateRepo stateRepo;
+
+    @Autowired
+    private CityRepo cityRepo;
 
     // --- Users ---
     public List<AppUser> getAllUsers() {
@@ -255,6 +261,126 @@ public class MasterService {
 
     public List<PaymentType> getAllPaymentTypes() {
         return paymentTypeRepo.findAll();
+    }
+
+    // --- Location: Countries ---
+    public List<Country> getAllCountries() {
+        return countryRepo.findAll();
+    }
+
+    public List<Country> getActiveCountries() {
+        return countryRepo.findByIsActiveTrue();
+    }
+
+    public Country createCountry(CountryDto dto) {
+        Country country = new Country();
+        country.setCountryName(dto.getCountryName());
+        country.setCountryCode(dto.getCountryCode());
+        country.setPhoneCode(dto.getPhoneCode());
+        country.setIsActive(dto.getIsActive() != null ? dto.getIsActive() : true);
+        return countryRepo.save(country);
+    }
+
+    public Country updateCountry(Integer id, CountryDto dto) {
+        Country country = countryRepo.findById(id)
+                .orElseThrow(() -> new RuntimeException("Country not found with id: " + id));
+        if (dto.getCountryName() != null) country.setCountryName(dto.getCountryName());
+        if (dto.getCountryCode() != null) country.setCountryCode(dto.getCountryCode());
+        if (dto.getPhoneCode() != null) country.setPhoneCode(dto.getPhoneCode());
+        if (dto.getIsActive() != null) country.setIsActive(dto.getIsActive());
+        return countryRepo.save(country);
+    }
+
+    public void deleteCountry(Integer id) {
+        countryRepo.deleteById(id);
+    }
+
+    // --- Location: States ---
+    public List<State> getAllStates(Integer countryId) {
+        if (countryId != null && countryId > 0) {
+            return stateRepo.findByCountryId(countryId);
+        }
+        return stateRepo.findAll();
+    }
+
+    public List<State> getActiveStates(Integer countryId) {
+        if (countryId != null && countryId > 0) {
+            return stateRepo.findByCountryIdAndIsActiveTrue(countryId);
+        }
+        return stateRepo.findByIsActiveTrue();
+    }
+
+    public State createState(StateDto dto) {
+        Country country = countryRepo.findById(dto.getCountryId())
+                .orElseThrow(() -> new RuntimeException("Country not found with id: " + dto.getCountryId()));
+        State state = new State();
+        state.setStateName(dto.getStateName());
+        state.setStateCode(dto.getStateCode());
+        state.setCountry(country);
+        state.setIsActive(dto.getIsActive() != null ? dto.getIsActive() : true);
+        return stateRepo.save(state);
+    }
+
+    public State updateState(Integer id, StateDto dto) {
+        State state = stateRepo.findById(id)
+                .orElseThrow(() -> new RuntimeException("State not found with id: " + id));
+        if (dto.getStateName() != null) state.setStateName(dto.getStateName());
+        if (dto.getStateCode() != null) state.setStateCode(dto.getStateCode());
+        if (dto.getCountryId() != null) {
+            Country country = countryRepo.findById(dto.getCountryId())
+                    .orElseThrow(() -> new RuntimeException("Country not found with id: " + dto.getCountryId()));
+            state.setCountry(country);
+        }
+        if (dto.getIsActive() != null) state.setIsActive(dto.getIsActive());
+        return stateRepo.save(state);
+    }
+
+    public void deleteState(Integer id) {
+        stateRepo.deleteById(id);
+    }
+
+    // --- Location: Cities ---
+    public List<City> getAllCities(Integer stateId) {
+        if (stateId != null && stateId > 0) {
+            return cityRepo.findByStateId(stateId);
+        }
+        return cityRepo.findAll();
+    }
+
+    public List<City> getActiveCities(Integer stateId) {
+        if (stateId != null && stateId > 0) {
+            return cityRepo.findByStateIdAndIsActiveTrue(stateId);
+        }
+        return cityRepo.findByIsActiveTrue();
+    }
+
+    public City createCity(CityDto dto) {
+        State state = stateRepo.findById(dto.getStateId())
+                .orElseThrow(() -> new RuntimeException("State not found with id: " + dto.getStateId()));
+        City city = new City();
+        city.setCityName(dto.getCityName());
+        city.setState(state);
+        city.setDefaultPincode(dto.getDefaultPincode());
+        city.setIsActive(dto.getIsActive() != null ? dto.getIsActive() : true);
+        return cityRepo.save(city);
+    }
+
+    public City updateCity(Integer id, CityDto dto) {
+        City city = cityRepo.findById(id)
+                .orElseThrow(() -> new RuntimeException("City not found with id: " + id));
+        if (dto.getCityName() != null) city.setCityName(dto.getCityName());
+        if (dto.getDefaultPincode() != null) city.setDefaultPincode(dto.getDefaultPincode());
+        if (dto.getStateId() != null) {
+            State state = stateRepo.findById(dto.getStateId())
+                    .orElseThrow(() -> new RuntimeException("State not found with id: " + dto.getStateId()));
+            city.setState(state);
+        }
+        if (dto.getIsActive() != null) city.setIsActive(dto.getIsActive());
+        return cityRepo.save(city);
+    }
+
+    public void deleteCity(Integer id) {
+        cityRepo.deleteById(id);
     }
 
     // --- Admin Dashboard Summary ---

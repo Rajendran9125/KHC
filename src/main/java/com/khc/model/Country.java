@@ -14,9 +14,15 @@ public class Country extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
 
-    @Column(name = "country_name")
+    @Column(name = "country_name", nullable = false)
     private String countryName;
 
+    @Column(name = "country_code")
+    private String countryCode;
+
+    @Column(name = "phone_code")
+    private String phoneCode;
+
     @Column(name = "is_active")
-    private Boolean isActive;
+    private Boolean isActive = true;
 }

@@ -17,7 +17,7 @@ public class Patient extends BaseEntity {
     private Long id;
 
     @Column(name = "mrn", unique = true, nullable = false)
-    private String mrn; // Medical Record Number e.g. "MRN-1001"
+    private String mrn; // Medical Record Number e.g. "MRN2026001"
 
     @Column(name = "first_name", nullable = false)
     private String firstName;
@@ -42,6 +42,18 @@ public class Patient extends BaseEntity {
 
     @Column(name = "address")
     private String address;
+
+    @Column(name = "country_id")
+    private Integer countryId;
+
+    @Column(name = "state_id")
+    private Integer stateId;
+
+    @Column(name = "city_id")
+    private Integer cityId;
+
+    @Column(name = "pincode")
+    private String pincode;
 
     @Column(name = "blood_group")
     private String bloodGroup;

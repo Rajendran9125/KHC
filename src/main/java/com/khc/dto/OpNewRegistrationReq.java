@@ -14,6 +14,11 @@ public class OpNewRegistrationReq {
     private String mobile;
     private String email;
     private String address;
+    private Integer countryId;
+    private Integer stateId;
+    private Integer cityId;
+    private String pincode;
+    private String residentialAddress;
     private String bloodGroup;
     private String emergencyContact;
 

@@ -14,14 +14,20 @@ public class City extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
 
-    @Column(name = "city_name")
+    @Column(name = "city_name", nullable = false)
     private String cityName;
 
-    @OneToOne
-    @JoinColumn(name = "district_id")
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "state_id", nullable = false)
+    private State state;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "district_id", nullable = true)
     private District district;
 
-    @Column(name = "is_active")
-    private Boolean isActive;
+    @Column(name = "default_pincode")
+    private String defaultPincode;
 
+    @Column(name = "is_active")
+    private Boolean isActive = true;
 }

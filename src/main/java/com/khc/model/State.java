@@ -9,17 +9,21 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode(callSuper = false)
 @Table(name = "khc_state")
 public class State extends BaseEntity {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
 
-    @Column(name = "state_name")
+    @Column(name = "state_name", nullable = false)
     private String stateName;
 
-    @OneToOne
-    @JoinColumn(name = "country_id")
+    @Column(name = "state_code")
+    private String stateCode;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "country_id", nullable = false)
     private Country country;
 
     @Column(name = "is_active")
-    private Boolean isActive;
+    private Boolean isActive = true;
 }

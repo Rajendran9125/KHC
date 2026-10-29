@@ -14,6 +14,10 @@ public class PatientUpdateReq {
     private String mobile;
     private String email;
     private String address;
+    private Integer countryId;
+    private Integer stateId;
+    private Integer cityId;
+    private String pincode;
     private String bloodGroup;
     private String emergencyContact;
 }

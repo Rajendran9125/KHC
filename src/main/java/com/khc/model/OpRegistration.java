@@ -17,7 +17,7 @@ public class OpRegistration extends BaseEntity {
     private Long id;
 
     @Column(name = "op_number", unique = true, nullable = false)
-    private String opNumber; // e.g. OP-2026-0001
+    private String opNumber; // e.g. OP2001
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "patient_id", nullable = false)
@@ -47,6 +47,21 @@ public class OpRegistration extends BaseEntity {
 
     @Column(name = "remarks")
     private String remarks;
+
+    @Column(name = "country_id")
+    private Integer countryId;
+
+    @Column(name = "state_id")
+    private Integer stateId;
+
+    @Column(name = "city_id")
+    private Integer cityId;
+
+    @Column(name = "pincode")
+    private String pincode;
+
+    @Column(name = "residential_address")
+    private String residentialAddress;
 
     @Column(name = "registration_date")
     private LocalDateTime registrationDate;
